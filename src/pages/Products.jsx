@@ -1,24 +1,47 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_PRODUCTS } from "../config/api";
 import { useAuth } from "../context/AuthContext";
+import {
+  productIdOptions,
+  productCategoryOptions,
+  productOnSaleOptions,
+  allProductsOptions,
+  productLittleDetailOptions,
+  productColorOneOptions,
+  productColortwoOptions,
+  isProductBestsellerOptions,
+  isProductNewOptions,
+} from "../data/productOptions";
 
 export default function Products() {
+  const navigate = useNavigate();
   const { authHeader } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [formMode, setFormMode] = useState(null);
   const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState({
+  const emptyForm = {
     productId: "",
     productName: "",
     productCategory: "",
     productPrice: "",
+    productOnSale: "false",
+    allProducts: "true",
+    productAbout: "",
+    productLittleDetail: "",
+    productInfo: "",
+    productColorOne: "",
+    productColortwo: "",
+    isProductBestseller: "0",
+    isProductNew: "no",
     imageOne: "",
     imageTwo: "",
     imageThree: "",
-  });
+  };
+  const [form, setForm] = useState(emptyForm);
 
   const loadProducts = () => {
     setLoading(true);
@@ -36,15 +59,7 @@ export default function Products() {
   const openAdd = () => {
     setFormMode("add");
     setEditingId(null);
-    setForm({
-      productId: "",
-      productName: "",
-      productCategory: "",
-      productPrice: "",
-      imageOne: "",
-      imageTwo: "",
-      imageThree: "",
-    });
+    setForm(emptyForm);
   };
 
   const openEdit = (p) => {
@@ -55,6 +70,15 @@ export default function Products() {
       productName: p.productName || "",
       productCategory: p.productCategory || "",
       productPrice: p.productPrice || "",
+      productOnSale: p.productOnSale ?? "false",
+      allProducts: p.allProducts ?? "true",
+      productAbout: p.productAbout || "",
+      productLittleDetail: p.productLittleDetail || "",
+      productInfo: p.productInfo || "",
+      productColorOne: p.productColorOne || "",
+      productColortwo: p.productColortwo || "",
+      isProductBestseller: p.isProductBestseller ?? "0",
+      isProductNew: p.isProductNew ?? "no",
       imageOne: p.imageOne || "",
       imageTwo: p.imageTwo || "",
       imageThree: p.imageThree || "",
@@ -90,6 +114,66 @@ export default function Products() {
     }
   };
 
+  const ensureOption = (options, current) =>
+    current && !options.includes(current) ? [current, ...options] : options;
+
+  const usedProductIds = new Set(products.map((p) => p.productId).filter(Boolean));
+  const availableProductIds =
+    formMode === "edit"
+      ? productIdOptions.filter((id) => id === form.productId || !usedProductIds.has(id))
+      : productIdOptions.filter((id) => !usedProductIds.has(id));
+  const productIdSelectOptions = ensureOption(availableProductIds, form.productId);
+
+  const fieldStyle = {
+    width: "100%",
+    padding: "0.625rem 0.75rem",
+    border: "1px solid #e2e8f0",
+    borderRadius: "8px",
+    fontSize: "0.9375rem",
+    color: "#1e293b",
+    backgroundColor: "#fff",
+    outline: "none",
+    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+  };
+  const fieldFocus = { borderColor: "#0f172a", boxShadow: "0 0 0 3px rgba(15, 23, 42, 0.1)" };
+
+  const renderInput = (name, label, placeholder, options = {}) => (
+    <div key={name} style={{ marginBottom: "0.25rem" }}>
+      <label style={{ display: "block", marginBottom: "0.375rem", fontSize: "0.8125rem", fontWeight: 500, color: "#475569" }}>
+        {label}
+      </label>
+      <input
+        type={options.type || "text"}
+        value={form[name]}
+        onChange={(e) => setForm((f) => ({ ...f, [name]: e.target.value }))}
+        placeholder={placeholder}
+        required={options.required || false}
+        style={fieldStyle}
+        onFocus={(e) => { e.target.style.borderColor = fieldFocus.borderColor; e.target.style.boxShadow = fieldFocus.boxShadow; }}
+        onBlur={(e) => { e.target.style.borderColor = fieldStyle.border; e.target.style.boxShadow = "none"; }}
+      />
+    </div>
+  );
+
+  const renderSelect = (name, label, options, required = false) => (
+    <div key={name} style={{ marginBottom: "0.25rem" }}>
+      <label style={{ display: "block", marginBottom: "0.375rem", fontSize: "0.8125rem", fontWeight: 500, color: "#475569" }}>
+        {label}
+      </label>
+      <select
+        value={form[name]}
+        onChange={(e) => setForm((f) => ({ ...f, [name]: e.target.value }))}
+        required={required}
+        style={fieldStyle}
+      >
+        <option value="">— Select —</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>{opt || "(empty)"}</option>
+        ))}
+      </select>
+    </div>
+  );
+
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
@@ -121,65 +205,60 @@ export default function Products() {
           onSubmit={handleSubmit}
           style={{
             background: "#fff",
-            padding: "1.5rem",
-            borderRadius: "8px",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+            padding: "1.75rem",
+            borderRadius: "12px",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04)",
             marginBottom: "1.5rem",
+            border: "1px solid #f1f5f9",
           }}
         >
-          <h3 style={{ margin: "0 0 1rem" }}>{formMode === "edit" ? "Edit Product" : "New Product"}</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", maxWidth: "600px" }}>
-            <div>
-              <label style={{ display: "block", marginBottom: "0.25rem", fontSize: "0.875rem" }}>Product ID</label>
-              <input
-                value={form.productId}
-                onChange={(e) => setForm((f) => ({ ...f, productId: e.target.value }))}
-                required
-                style={{ width: "100%", padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: "6px" }}
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", marginBottom: "0.25rem", fontSize: "0.875rem" }}>Name</label>
-              <input
-                value={form.productName}
-                onChange={(e) => setForm((f) => ({ ...f, productName: e.target.value }))}
-                style={{ width: "100%", padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: "6px" }}
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", marginBottom: "0.25rem", fontSize: "0.875rem" }}>Category</label>
-              <input
-                value={form.productCategory}
-                onChange={(e) => setForm((f) => ({ ...f, productCategory: e.target.value }))}
-                style={{ width: "100%", padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: "6px" }}
-              />
-            </div>
-            <div>
-              <label style={{ display: "block", marginBottom: "0.25rem", fontSize: "0.875rem" }}>Price</label>
-              <input
-                value={form.productPrice}
-                onChange={(e) => setForm((f) => ({ ...f, productPrice: e.target.value }))}
-                style={{ width: "100%", padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: "6px" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", marginBottom: "0.25rem", fontSize: "0.875rem" }}>Image URL (main)</label>
-              <input
-                value={form.imageOne}
-                onChange={(e) => setForm((f) => ({ ...f, imageOne: e.target.value }))}
-                placeholder="https://..."
-                style={{ width: "100%", padding: "0.5rem", border: "1px solid #e2e8f0", borderRadius: "6px" }}
-              />
-            </div>
+          <h3 style={{ margin: "0 0 1.25rem", fontSize: "1.125rem", fontWeight: 600, color: "#1e293b" }}>
+            {formMode === "edit" ? "Edit Product" : "New Product"}
+          </h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem", maxWidth: "820px" }}>
+            {renderSelect("productId", "Product ID", productIdSelectOptions, true)}
+            {renderInput("productName", "Name", "e.g. Sofa, Lamp, Carpet")}
+            {renderSelect("productCategory", "Category", ensureOption(productCategoryOptions, form.productCategory))}
+            {renderInput("productPrice", "Price", "e.g. 85.00", { type: "text" })}
+            {renderSelect("productOnSale", "On Sale", productOnSaleOptions)}
+            {renderSelect("allProducts", "All Products", allProductsOptions)}
+            {renderSelect("productColorOne", "Color 1", ensureOption(productColorOneOptions, form.productColorOne))}
+            {renderSelect("productColortwo", "Color 2", ensureOption(productColortwoOptions, form.productColortwo))}
+            {renderSelect("isProductBestseller", "Bestseller", isProductBestsellerOptions)}
+            {renderSelect("isProductNew", "New", isProductNewOptions)}
+            {renderInput("productAbout", "About", "Short description or product summary")}
+            {renderSelect("productLittleDetail", "Little Detail", ensureOption(productLittleDetailOptions, form.productLittleDetail))}
+            {renderInput("productInfo", "Info", "Product details or specifications")}
+            {renderInput("imageOne", "Image URL 1", "https://...")}
+            {renderInput("imageTwo", "Image URL 2", "https://...")}
+            {renderInput("imageThree", "Image URL 3", "https://...")}
           </div>
-          <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
-            <button type="submit" style={{ padding: "0.5rem 1rem", background: "#0f172a", color: "#fff", border: "none", borderRadius: "6px" }}>
-              {editing ? "Update" : "Create"}
+          <div style={{ marginTop: "1.5rem", display: "flex", gap: "0.75rem" }}>
+            <button
+              type="submit"
+              style={{
+                padding: "0.625rem 1.25rem",
+                background: "#0f172a",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+              }}
+            >
+              {formMode === "edit" ? "Update" : "Create"}
             </button>
             <button
               type="button"
               onClick={() => { setFormMode(null); setEditingId(null); }}
-              style={{ padding: "0.5rem 1rem", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "6px" }}
+              style={{
+                padding: "0.625rem 1.25rem",
+                background: "#fff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "8px",
+                fontSize: "0.875rem",
+                color: "#475569",
+              }}
             >
               Cancel
             </button>
@@ -204,28 +283,63 @@ export default function Products() {
             </thead>
             <tbody>
               {products.map((p) => (
-                <tr key={p._id}>
+                <tr
+                  key={p._id}
+                  onClick={() => navigate(`/products/${p._id}`)}
+                  style={{ cursor: "pointer" }}
+                >
                   <td>{p.productId || p._id}</td>
                   <td>
                     <div>{p.productName || p.productCategory || "—"}</div>
                     <div style={{ fontSize: "0.8rem", color: "#64748b" }}>{p.productCategory}</div>
                   </td>
                   <td>{p.productPrice != null ? `$${p.productPrice}` : "—"}</td>
-                  <td>
-                    <button
-                      type="button"
-                      onClick={() => openEdit(p)}
-                      style={{ marginRight: "0.5rem", padding: "0.25rem 0.5rem", fontSize: "0.8rem" }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(p._id)}
-                      style={{ padding: "0.25rem 0.5rem", fontSize: "0.8rem", color: "#b91c1c" }}
-                    >
-                      Delete
-                    </button>
+                  <td onClick={(e) => e.stopPropagation()}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); openEdit(p); }}
+                        title="Edit"
+                        style={{
+                          padding: "0.35rem",
+                          border: "none",
+                          background: "#f1f5f9",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleDelete(p._id); }}
+                        title="Delete"
+                        style={{
+                          padding: "0.35rem",
+                          border: "none",
+                          background: "#fef2f2",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "#b91c1c",
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          <line x1="10" y1="11" x2="10" y2="17" />
+                          <line x1="14" y1="11" x2="14" y2="17" />
+                        </svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

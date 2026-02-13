@@ -6,6 +6,10 @@ import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
+import ProductDetail from "./pages/ProductDetail";
+import Users from "./pages/Users";
+import Inquiries from "./pages/Inquiries";
+import InquiryDetail from "./pages/InquiryDetail";
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -31,6 +35,10 @@ function AppRoutes() {
       >
         <Route index element={<Dashboard />} />
         <Route path="products" element={<Products />} />
+        <Route path="products/:id" element={<ProductDetail />} />
+        <Route path="users" element={<Users />} />
+        <Route path="inquiries" element={<Inquiries />} />
+        <Route path="inquiries/:id" element={<InquiryDetail />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

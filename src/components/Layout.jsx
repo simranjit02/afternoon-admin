@@ -50,6 +50,28 @@ export default function Layout() {
           >
             Products
           </Link>
+          <Link
+            to="/users"
+            style={{
+              display: "block",
+              padding: "0.6rem 1.25rem",
+              color: "#cbd5e1",
+              fontSize: "0.9rem",
+            }}
+          >
+            Users
+          </Link>
+          <Link
+            to="/inquiries"
+            style={{
+              display: "block",
+              padding: "0.6rem 1.25rem",
+              color: "#cbd5e1",
+              fontSize: "0.9rem",
+            }}
+          >
+            Inquiries
+          </Link>
         </nav>
       </aside>
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
